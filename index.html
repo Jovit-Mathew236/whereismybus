@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Location Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.2/dist/leaflet.css"
+        integrity="sha256-sA+zWATbFveLLNqWO2gtiw3HL/lh1giY/Inf1BJ0z14=" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.2/dist/leaflet.js"
+        integrity="sha256-o9N1jGDZrf5tS+Ft4gbIK7mYMipq9lqpVJ91xHSyKhg=" crossorigin=""></script>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+
+        .card {
+            width: 80%;
+            max-width: 600px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 16px;
+            background: #007bff;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        #map {
+            height: 350px;
+        }
+
+        .location-info {
+            padding: 8px;
+            font-size: 14px;
+            background: #e9ecef;
+            border-bottom: 1px solid #ddd;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="card">
+        <div class="card-header">Live Location Map</div>
+        <div class="location-info" id="location-info">Locating...</div>
+        <div id="map"></div>
+    </div>
+    <script>
+        const map = L.map('map').setView([51.505, -0.09], 13); // Initializes map with default coordinates and zoom level
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        }).addTo(map); // Sets map data source and associates with map
+
+        let marker, circle;
+        let zoomed = false;
+        const locationInfo = document.getElementById('location-info');
+
+        navigator.geolocation.watchPosition(success, error);
+
+        function success(pos) {
+            const lat = pos.coords.latitude;
+            const lng = pos.coords.longitude;
+            const accuracy = pos.coords.accuracy;
+
+            if (marker) {
+                map.removeLayer(marker);
+                map.removeLayer(circle);
+            }
+
+            marker = L.marker([lat, lng]).addTo(map);
+            circle = L.circle([lat, lng], { radius: accuracy }).addTo(map);
+
+            if (!zoomed) {
+                map.fitBounds(circle.getBounds());
+                zoomed = true;
+            } else {
+                map.setView([lat, lng]);
+            }
+
+            locationInfo.textContent = `Latitude: ${lat.toFixed(5)}, Longitude: ${lng.toFixed(5)}, Accuracy: ${accuracy.toFixed(2)} meters`;
+        }
+
+        function error(err) {
+            if (err.code === 1) {
+                alert("Please allow geolocation access");
+            } else {
+                alert("Cannot get current location");
+            }
+        }
+    </script>
+</body>
+
+</html>
